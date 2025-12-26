@@ -5,3 +5,8 @@ pdfplumber
 pandas
 streamlit
 requests
+
+sentence-transformers
+faiss-cpu
+numpy
+tqdm
