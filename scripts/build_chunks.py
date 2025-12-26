@@ -8,10 +8,8 @@ from typing import Dict
 from api.rag.pdf_text import load_documents
 from api.rag.chunking import chunk_document_text
 
-# RAW_DIR = Path("data/raw")
-RAW_DIR = Path("C:/Users/Siddharth/Desktop/Portfolio_Projects/Finance-AI-RAG/data/raw")
-# OUT_PATH = Path("data/processed/chunks.jsonl")
-OUT_PATH = Path("C:/Users/Siddharth/Desktop/Portfolio_Projects/Finance-AI-RAG/data/processed/chunks.jsonl")
+RAW_DIR = Path("data/raw")
+OUT_PATH = Path("data/processed/chunks.jsonl")
 
 def infer_metadata(doc_id: str, filename: str) -> Dict[str, str]:
     """
@@ -85,3 +83,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
