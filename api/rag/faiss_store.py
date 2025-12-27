@@ -11,12 +11,9 @@ import numpy as np
 
 from api.rag.embeddings import embed_texts
 
-# INDEX_PATH = Path("data/processed/embeddings.faiss")
-INDEX_PATH = Path("C:/Users/Siddharth/Desktop/Portfolio_Projects/Finance-AI-RAG/data/processed/embeddings.faiss")
-# META_PATH = Path("data/processed/embeddings_meta.jsonl")
-META_PATH = Path("C:/Users/Siddharth/Desktop/Portfolio_Projects/Finance-AI-RAG/data/processed/embeddings_meta.jsonl")
-# CHUNKS_PATH = Path("data/processed/chunks.jsonl")
-CHUNKS_PATH = Path("C:/Users/Siddharth/Desktop/Portfolio_Projects/Finance-AI-RAG/data/processed/chunks.jsonl")
+INDEX_PATH = Path("data/processed/embeddings.faiss")
+META_PATH = Path("data/processed/embeddings_meta.jsonl")
+CHUNKS_PATH = Path("data/processed/chunks.jsonl")
 
 @dataclass
 class RetrievedChunk:
@@ -116,3 +113,4 @@ def search(
             break
 
     return results
+
