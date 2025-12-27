@@ -1,3 +1,10 @@
+"""
+Lexical baseline retriever (keyword overlap).
+
+Kept for benchmarking against vector retrieval (FAISS).
+Not used by the API in the current version.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,7 +16,7 @@ class EvidenceChunk:
     chunk_id: str
     doc_id: str
     text: str
-    score: int
+    score: float
 
 
 def chunk_text(text: str, chunk_size: int = 1200, overlap: int = 200) -> List[str]:
@@ -75,3 +82,4 @@ def retrieve_top_k(doc_id: str, doc_text: str, query: str, top_k: int = 5) -> Li
 
     scored.sort(key=lambda x: x.score, reverse=True)
     return scored[:top_k]
+
