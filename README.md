@@ -17,6 +17,11 @@ The current version implements a strict evidence-first retrieval workflow:
 
 Next step: add guardrails (refusal thresholds, citation enforcement, scope limits), then introduce multi-agent verification and evaluation.
 
+### Evidence Presentation
+
+Retrieved excerpts are post-processed to improve readability while preserving source fidelity.
+Sentence-safe snippet extraction is used to avoid mid-word or mid-sentence starts caused by PDF formatting.
+
 ## Scope and Constraints
 
 - The system answers questions using only the indexed filings and does not rely on external financial knowledge.
