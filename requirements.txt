@@ -5,8 +5,11 @@ pdfplumber
 pandas
 streamlit
 requests
-
 sentence-transformers
 faiss-cpu
 numpy
 tqdm
+python-dotenv
+httpx
+arize-phoenix
+openinference-instrumentation
