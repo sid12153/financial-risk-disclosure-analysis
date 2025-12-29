@@ -1,3 +1,20 @@
-2025-12-28T22:55:10.506651,What is CEO's favorite food,GoldmanSachs_2023_10K,0.326,True,5
-2025-12-28T23:13:42.864803,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,0.619,True,5
-2025-12-28T23:15:07.039017,stock price target next year,GoldmanSachs_2023_10K,0.390,True,5
+timestamp_utc,question,doc_id,top_score,refused,top_k,retrieval_ms,llm_ms,total_ms
+2025-12-28T22:55:10.506651,What is CEO's favorite food,GoldmanSachs_2023_10K,0.326,TRUE,5,,,
+2025-12-28T23:13:42.864803,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,0.619,TRUE,5,,,
+2025-12-28T23:15:07.039017,stock price target next year,GoldmanSachs_2023_10K,0.39,TRUE,5,,,
+2025-12-29T17:20:02.057464,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,0.619,FALSE,3,,,
+2025-12-29T17:20:18.202945,what is CEO's favorite food,GoldmanSachs_2023_10K,0.326,TRUE,5,,,
+2025-12-29T17:20:44.223888,what was total revenue,GoldmanSachs_2023_10K,0.473,TRUE,5,,,
+2025-12-29T17:51:08.067876,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,0.619,FALSE,3,,,
+2025-12-29T17:52:14.391801,What is the CEO’s favorite food?,GoldmanSachs_2023_10K,0.301,TRUE,5,,,
+2025-12-29T17:52:36.097038,What does the filing say about liquidity risk and funding sources?,GoldmanSachs_2023_10K,0.652,FALSE,3,,,
+2025-12-29T17:54:02.620447,what is the net revenue,GoldmanSachs_2023_10K,0.548,TRUE,5,,,
+2025-12-29T17:54:12.945826,what is the net revenue for 2023,GoldmanSachs_2023_10K,0.556,TRUE,5,,,
+2025-12-29T17:54:18.885753,what is the net profit for 2023,GoldmanSachs_2023_10K,0.544,TRUE,5,,,
+2025-12-29T17:55:52.557545,what is the net profit for 2023,GoldmanSachs_2023_10K,0.544,TRUE,3,,,
+2025-12-29T17:59:52.031336,What will the stock price be next year?,GoldmanSachs_2023_10K,0.478,TRUE,5,,,
+2025-12-29T18:00:42.339599,what was net revenue for 2023,GoldmanSachs_2023_10K,0.565,FALSE,3,,,
+2025-12-29T18:01:05.362702,what was net revenue for 2023,GoldmanSachs_2023_10K,0.565,FALSE,3,,,
+2025-12-29T18:01:45.472635,What does the filing say about resolution planning or TLAC?,GoldmanSachs_2023_10K,0.513,TRUE,5,,,
+2025-12-29T18:02:31.251322,what will be stock prices next year,GoldmanSachs_2023_10K,0.453,TRUE,5,,,
+2025-12-29T18:03:08.601056,What does the filing say about resolution planning or TLAC?,GoldmanSachs_2023_10K,0.513,TRUE,5,,,
