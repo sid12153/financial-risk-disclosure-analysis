@@ -15,13 +15,38 @@ The current version implements a strict evidence-first retrieval workflow:
 - the API returns the top retrieved excerpts with chunk-level citations
 - the system refuses to answer if no relevant evidence is retrieved
 
-## Guardrails and Monitoring (Current)
+## Guardrails and Monitoring
 
 - **Refusal threshold**: the API refuses if the top retrieval score is below `MIN_RETRIEVAL_SCORE` (set to 0.60 in the current build).
 - **Evidence-first responses**: answers are produced only from retrieved excerpts and include chunk-level citations.
 - **Query logging**: basic request metadata (question, doc_id, top score, refused flag) is logged to `monitoring/query_log.csv` for debugging and monitoring.
 
-Next step: strengthen guardrails (citation coverage checks, scope limits), then add LLM answer synthesis and multi-agent verification.
+## Multi-Agent Workflow (LLM + Retrieval)
+
+This project uses a multi-agent RAG workflow:
+
+1. **Planner Agent (Mistral via Hugging Face Inference API)**  
+   Classifies intent (in-scope vs out-of-scope) and rewrites the query for retrieval.
+
+2. **Retriever (FAISS)**  
+   Retrieves top-k evidence chunks from indexed filings.
+
+3. **Verifier Agent (Llama via Hugging Face Inference API)**  
+   Rejects answers when evidence is weak or the question is out-of-scope.
+
+4. **Summarizer Agent (Llama via Hugging Face Inference API)**  
+   Produces a concise answer grounded only in retrieved evidence, with chunk-level citations.
+
+## Monitoring and Metrics
+
+Requests are logged to `monitoring/query_log.csv` with:
+- end-to-end latency (ms)
+- planner/verifier/summarizer latency (ms)
+- top retrieval score
+- refusal outcome
+
+Next: Arize Phoenix tracing for end-to-end observability.
+
 
 ### Evidence Presentation
 
