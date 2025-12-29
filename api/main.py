@@ -18,11 +18,9 @@ from api.rag.hf_client import HFInferenceClient
 HF_SUMMARY_MODEL = os.getenv("HF_SUMMARY_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
 MIN_RETRIEVAL_SCORE = 0.53
 
-# LOG_PATH = Path("monitoring/query_log.csv")
-LOG_PATH = Path("C:/Users/Siddharth/Desktop/Portfolio_Projects/Finance-AI-RAG/monitoring/query_log.csv")
+LOG_PATH = Path("monitoring/query_log.csv")
 
-# RAW_DIR = Path("data/raw")
-RAW_DIR = Path("C:/Users/Siddharth/Desktop/Portfolio_Projects/Finance-AI-RAG/data/raw")
+RAW_DIR = Path("data/raw")
 
 app = FastAPI(title="Finance RAG (Strict, Evidence-Based)")
 
@@ -289,4 +287,3 @@ Evidence:
         citations=citations,
         evidence=evidence,
     )
-
