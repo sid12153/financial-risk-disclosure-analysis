@@ -15,7 +15,13 @@ The current version implements a strict evidence-first retrieval workflow:
 - the API returns the top retrieved excerpts with chunk-level citations
 - the system refuses to answer if no relevant evidence is retrieved
 
-Next step: add guardrails (refusal thresholds, citation enforcement, scope limits), then introduce multi-agent verification and evaluation.
+## Guardrails and Monitoring (Current)
+
+- **Refusal threshold**: the API refuses if the top retrieval score is below `MIN_RETRIEVAL_SCORE` (set to 0.60 in the current build).
+- **Evidence-first responses**: answers are produced only from retrieved excerpts and include chunk-level citations.
+- **Query logging**: basic request metadata (question, doc_id, top score, refused flag) is logged to `monitoring/query_log.csv` for debugging and monitoring.
+
+Next step: strengthen guardrails (citation coverage checks, scope limits), then add LLM answer synthesis and multi-agent verification.
 
 ### Evidence Presentation
 
