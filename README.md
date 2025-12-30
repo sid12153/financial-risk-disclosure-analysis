@@ -1,4 +1,5 @@
 ![Zero Hallucination Policy](https://img.shields.io/badge/Zero--Hallucination-Policy%20Enforced-brightgreen)
+
 **All responses are either fully cited from source filings or explicitly refused.  
 Unit tests enforce refusal for out-of-scope queries (e.g., stock price predictions).**
 
