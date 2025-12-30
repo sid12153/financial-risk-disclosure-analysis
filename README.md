@@ -1,91 +1,124 @@
-# Financial Risk & Disclosure Analysis Using Public Filings
-Analysts and consultants often need to read long financial filings to understand a company’s risks, regulatory exposure, and forward-looking concerns. These documents are dense, repetitive, and time-consuming to analyze, especially when comparing disclosures across reporting periods or companies.
+# Financial Risk and Disclosure Q&A from SEC Filings (Strict, Evidence-Grounded)
 
-This project explores how public financial filings such as SEC 10-K and 10-Q reports can be processed and queried in a structured way to support risk and disclosure analysis. The system retrieves relevant sections from source documents based on analyst-style questions and produces concise summaries that are explicitly grounded in the underlying text.
+Analysts and consultants often need to read long financial filings to understand a company’s risks, regulatory exposure, and forward-looking concerns. These documents are dense, repetitive, and time-consuming to analyze, especially when comparing disclosures across companies.
 
-A key focus of this project is reliability rather than generation. The system is designed to surface evidence from filings, cite the source of each response, and avoid answering questions when the available documents do not provide sufficient information.
+This project turns SEC filings (10-K and later 10-Q) into a **queryable evidence base**. Users ask analyst-style questions, and the system returns concise answers that are explicitly grounded in retrieved excerpts, with chunk-level citations.
 
-## Current Status (Evidence-First Retrieval)
+A core goal is **reliability over fluency**: the system is designed to refuse out-of-scope questions and avoid unsupported generation.
 
-The current version implements a strict evidence-first retrieval workflow:
-- filings are parsed from PDFs stored in `data/raw`
-- text is chunked into overlapping segments and saved to `data/processed/chunks.jsonl`
-- embeddings are generated using `sentence-transformers/all-MiniLM-L6-v2`
-- a FAISS vector index is built and stored in `data/processed/embeddings.faiss`
-- the API returns the top retrieved excerpts with chunk-level citations
-- the system refuses to answer if no relevant evidence is retrieved
+---
 
-## Guardrails and Monitoring
+## Current Status (Day 13 — Multi-Agent Evidence RAG)
 
-- **Refusal threshold**: the API refuses if the top retrieval score is below `MIN_RETRIEVAL_SCORE` (set to 0.60 in the current build).
-- **Evidence-first responses**: answers are produced only from retrieved excerpts and include chunk-level citations.
-- **Query logging**: basic request metadata (question, doc_id, top score, refused flag) is logged to `monitoring/query_log.csv` for debugging and monitoring.
+The current version implements a strict evidence-first workflow:
+
+- PDFs are parsed from `data/raw`
+- Text is chunked and stored in `data/processed/chunks.jsonl`
+- Embeddings are generated using `sentence-transformers/all-MiniLM-L6-v2`
+- A FAISS index is built and stored in `data/processed/embeddings.faiss`
+- `/ask` runs a **multi-agent workflow** that enforces scope + evidence sufficiency
+- Responses include chunk-level citations and the system refuses when evidence is weak or the question is out-of-scope
+
+---
 
 ## Multi-Agent Workflow (LLM + Retrieval)
 
-This project uses a multi-agent RAG workflow:
+This project uses a small, production-style multi-agent pipeline to enforce a strict policy.
 
-1. **Planner Agent (Mistral via Hugging Face Inference API)**  
-   Classifies intent (in-scope vs out-of-scope) and rewrites the query for retrieval.
+1) **Planner Agent (Mistral via Hugging Face Inference API)**
+- Classifies intent: in-scope vs out-of-scope  
+- Rewrites the question into a retrieval-friendly query  
+- Chooses an appropriate `top_k` (bounded)
 
-2. **Retriever (FAISS)**  
-   Retrieves top-k evidence chunks from indexed filings.
+2) **Retriever (FAISS)**
+- Retrieves top-k evidence chunks from indexed filings
+- Returns similarity scores and chunk IDs
 
-3. **Verifier Agent (Llama via Hugging Face Inference API)**  
-   Rejects answers when evidence is weak or the question is out-of-scope.
+3) **Verifier Agent (Llama via Hugging Face Inference API)**
+- Blocks answers when:
+  - question is out-of-scope (stock predictions, trivia, personal preferences, etc.)
+  - retrieval confidence is below threshold
+  - evidence does not cover the requested topic
 
-4. **Summarizer Agent (Llama via Hugging Face Inference API)**  
-   Produces a concise answer grounded only in retrieved evidence, with chunk-level citations.
+4) **Summarizer Agent (Llama via Hugging Face Inference API)**
+- Produces 3–6 bullet points
+- Uses only retrieved evidence
+- Every bullet ends with a citation like `(chunk_id)`
 
-## Monitoring and Metrics
+---
 
-Requests are logged to `monitoring/query_log.csv` with:
-- end-to-end latency (ms)
-- planner/verifier/summarizer latency (ms)
-- top retrieval score
-- refusal outcome
+## Guardrails and Monitoring (Current)
 
-Next: Arize Phoenix tracing for end-to-end observability.
+- **Retrieval confidence gating**: the API refuses if the top retrieval score is below `MIN_RETRIEVAL_SCORE`.
+- **Scope enforcement**: the Planner/Verifier refuse out-of-scope questions by design.
+- **Evidence-only answers**: the summarizer is instructed to use only evidence excerpts and include chunk citations.
+- **Query logging**: requests are logged to `monitoring/query_log.csv`, including:
+  - top retrieval score
+  - refusal outcome
+  - end-to-end latency
+  - planner / retrieval / verifier / summarizer latency breakdown (ms)
 
+Planned next: Arize Phoenix tracing for end-to-end observability.
 
-### Evidence Presentation
+---
 
-Retrieved excerpts are post-processed to improve readability while preserving source fidelity.
-Sentence-safe snippet extraction is used to avoid mid-word or mid-sentence starts caused by PDF formatting.
+## Evidence Presentation
 
-## Scope and Constraints
+Retrieved excerpts are post-processed for readability while preserving source fidelity.
+The UI supports viewing both cleaned excerpts and raw chunk text.
 
-- The system answers questions using only the indexed filings and does not rely on external financial knowledge.
-- Responses are grounded in retrieved text excerpts and include explicit citations.
-- If relevant evidence cannot be retrieved, the system returns a refusal rather than generating an unsupported answer.
+---
 
-These constraints are intentional and reflect analyst and compliance-oriented workflows where traceability and evidence are more important than fluent text generation.
+## Scope: What This Can and Cannot Answer
+
+### In scope (designed to answer)
+- Risk factors and regulatory exposure
+- Capital and liquidity disclosures
+- Resolution planning and TLAC references (when present in evidence)
+- Segment-level metrics and reported figures (when present in evidence)
+- Policy language and compliance-related disclosures explicitly stated in filings
+
+### Out of scope (designed to refuse)
+- Stock price predictions or “next year” price targets
+- Personal preferences (e.g., “CEO’s favorite food”)
+- Any claim not supported by retrieved filing excerpts
+
+These constraints are intentional and reflect compliance-style workflows where traceability matters more than free-form generation.
+
+---
 
 ## Project Structure
 
-- `api/` – FastAPI backend implementing document ingestion, retrieval, and strict evidence-based responses
-- `streamlit/` – Streamlit user interface for querying filings and reviewing citations
-- `data/raw/` – Raw SEC filing PDFs used for the current baseline
-- `architecture.md` – System design and data flow
-- `data_sources.md` – Description of source documents and scope
+- `api/` – FastAPI backend (retrieval + multi-agent guardrails + strict responses)
+- `api/rag/` – retrieval store, HF LLM client, and multi-agent orchestration
+- `streamlit/` – Streamlit UI for querying filings and reviewing evidence
+- `data/raw/` – raw SEC filing PDFs (local only)
+- `data/processed/` – chunk store + embeddings + FAISS index
+- `monitoring/` – query logs for debugging and monitoring
+- `architecture.md` – system design and data flow
+- `data_sources.md` – documents used and scope
+
+---
 
 ## Data Ingestion and Chunking
 
-Public SEC filings (10-K) are ingested from PDF format and processed through a deterministic chunking pipeline. Each filing is extracted using `pdfplumber`, cleaned, and split into overlapping text chunks to support downstream retrieval.
+SEC filings (10-K) are ingested from PDF format and processed through a deterministic chunking pipeline. Each filing is extracted using `pdfplumber`, cleaned, and split into overlapping chunks for retrieval.
 
-For each chunk, the pipeline records:
+Each chunk stores:
 - document identifier
 - company name
 - filing year and type
-- character length
 - deterministic chunk ID
+- chunk text and length
 
-The current dataset includes:
+Current dataset:
 - Goldman Sachs 2023 10-K (1,789 chunks)
 - JPMorgan Chase 2023 10-K (1,408 chunks)
 - Morgan Stanley 2023 10-K (637 chunks)
 
 Processed chunks are stored in `data/processed/chunks.jsonl` (3,834 chunks across 3 filings).
+
+---
 
 ## How to Run Locally
 
