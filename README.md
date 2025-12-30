@@ -1,3 +1,7 @@
+![Zero Hallucination Policy](https://img.shields.io/badge/Zero--Hallucination-Policy%20Enforced-brightgreen)
+**All responses are either fully cited from source filings or explicitly refused.  
+Unit tests enforce refusal for out-of-scope queries (e.g., stock price predictions).**
+
 # Financial Risk and Disclosure Q&A from SEC Filings (Strict, Evidence-Grounded)
 
 Analysts and consultants often need to read long financial filings to understand a company’s risks, regulatory exposure, and forward-looking concerns. These documents are dense, repetitive, and time-consuming to analyze, especially when comparing disclosures across companies.
