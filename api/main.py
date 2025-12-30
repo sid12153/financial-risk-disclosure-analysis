@@ -13,15 +13,22 @@ from datetime import datetime
 import os
 import time
 from api.rag.hf_client import HFInferenceClient
+from api.rag.agents import run_multi_agent
 
-
-HF_SUMMARY_MODEL = os.getenv("HF_SUMMARY_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
+PLANNER_MODEL = os.getenv("HF_PLANNER_MODEL", "mistralai/Mistral-7B-Instruct-v0.2")
+VERIFIER_MODEL = os.getenv("HF_VERIFIER_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
+SUMMARY_MODEL = os.getenv("HF_SUMMARY_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
 MIN_RETRIEVAL_SCORE = 0.53
 
 LOG_PATH = Path("monitoring/query_log.csv")
+LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+if not LOG_PATH.exists():
+    LOG_PATH.write_text(
+        "ts,question,doc_id,top_k,top_score,refused,total_ms,planner_ms,retrieval_ms,verifier_ms,summary_ms\n",
+        encoding="utf-8"
+    )
 
 RAW_DIR = Path("data/raw")
-
 app = FastAPI(title="Finance RAG (Strict, Evidence-Based)")
 
 
@@ -152,138 +159,97 @@ def sources() -> Dict[str, Any]:
     return {
         "available_docs": list_sources()
     }
-
 @app.post("/ask", response_model=AskResponse)
 def ask(req: AskRequest) -> AskResponse:
     t0 = time.perf_counter()
 
-    # 1) Retrieve (FAISS)
-    try:
-        hits = search(query=req.question, top_k=req.top_k, doc_id=req.doc_id)
-    except FileNotFoundError as e:
-        return AskResponse(
-            answer="",
-            refused=True,
-            refusal_reason=str(e),
-            citations=[],
-            evidence=[],
-        )
+    out = run_multi_agent(
+        question=req.question,
+        doc_id=req.doc_id,
+        top_k=req.top_k,
+        min_score=MIN_RETRIEVAL_SCORE,
+        planner_model=PLANNER_MODEL,
+        verifier_model=VERIFIER_MODEL,
+        summary_model=SUMMARY_MODEL,
+    )
+    hits = out.get("hits", [])
+    lat = out.get("latency", {})
+    plan = out.get("plan", None)
 
-    if not hits:
-        log_query(req.question, req.doc_id, 0.0, True, 0)
-        return AskResponse(
-            answer="I can’t answer that from the indexed filings I currently have.",
-            refused=True,
-            refusal_reason="No relevant evidence retrieved. Try rephrasing or choose a different filing.",
-            citations=[],
-            evidence=[],
-        )
+    print(
+        f"[ASK] refused={out.get('refused')} top_score={out.get('top_score', 0.0):.3f} "
+        f"hits={len(hits)} doc_id={getattr(plan, 'doc_id', None) or (hits[0].doc_id if hits else req.doc_id)}"
+    )
 
-    top_score = float(hits[0].score)
+    if plan:
+        print(f"[PLAN] intent={plan.intent} top_k={plan.top_k} rewritten='{plan.rewritten_query[:120]}'")
 
-    # 2) Score threshold gate
-    if top_score < MIN_RETRIEVAL_SCORE:
-        log_query(req.question, req.doc_id, top_score, True, len(hits))
-        return AskResponse(
-            answer="I can’t answer that reliably from the indexed filings.",
-            refused=True,
-            refusal_reason=f"Top retrieval score ({top_score:.3f}) is below confidence threshold ({MIN_RETRIEVAL_SCORE:.2f}).",
-            citations=[],
-            evidence=[],
-        )
+    print(
+        f"[LAT] planner_ms={lat.get('planner_ms', 0):.1f} "
+        f"retrieval_ms={lat.get('retrieval_ms', 0):.1f} "
+        f"verifier_ms={lat.get('verifier_ms', 0):.1f} "
+        f"summary_ms={lat.get('summary_ms', 0):.1f}"
+    )
 
-    # 3) Dedupe + keyword guardrail
-    hits = dedupe_hits(hits, max_per_doc=3)
+    if hits:
+        preview = hits[0].text.replace("\n", " ")[:140]
+        print(f"[TOP] {hits[0].chunk_id} score={float(hits[0].score):.3f} text='{preview}...'")
 
-    evidence_texts = [h.text for h in hits[: min(len(hits), 5)]]
-    if not keyword_coverage_gate(req.question, evidence_texts, min_hits=2):
-        log_query(req.question, req.doc_id, top_score, True, len(hits))
-        return AskResponse(
-            answer="I can’t answer that reliably from the indexed filings.",
-            refused=True,
-            refusal_reason="Retrieved text does not contain enough direct coverage of the question terms (scope guardrail).",
-            citations=[],
-            evidence=[],
-        )
-
-    # 4) Citations + evidence payload
-    citations = [Citation(chunk_id=h.chunk_id, doc_id=h.doc_id, score=float(h.score)) for h in hits]
-    if not citations:
-        log_query(req.question, req.doc_id, top_score, True, len(hits))
-        return AskResponse(
-            answer="",
-            refused=True,
-            refusal_reason="No citations could be generated for this query.",
-            citations=[],
-            evidence=[],
-        )
-
-    evidence: List[Dict[str, Any]] = []
-    for h in hits:
-        evidence.append(
-            {
-                "chunk_id": h.chunk_id,
-                "doc_id": h.doc_id,
-                "score": float(h.score),
-                "text": h.text,  # raw
-                "text_clean": clean_excerpt(h.text),  # nicer UI
-            }
-        )
-
-    # 5) LLM summarization (grounded, with citations)
-    # Use only top 5 chunks to keep prompt small
-    compact = []
-    for h in hits[:5]:
-        compact.append(f"[{h.chunk_id}]\n{clean_excerpt(h.text)[:900]}")
-    evidence_blob = "\n\n".join(compact)
-
-    prompt = f"""
-You are a financial filings assistant.
-
-Answer the user question using ONLY the evidence below.
-Write 3–6 bullet points in clear, normal English.
-Every bullet MUST end with a citation like (chunk_id).
-Do NOT invent details. If evidence is insufficient, respond exactly:
-"I can’t answer from the indexed filings."
-
-Question: {req.question}
-
-Evidence:
-{evidence_blob}
-""".strip()
-
-    try:
-        client = HFInferenceClient()
-        llm_res = client.generate(
-            model=HF_SUMMARY_MODEL,
-            prompt=prompt,
-            max_new_tokens=320,
-            temperature=0.2
-        )
-        answer_text = llm_res.text.strip()
-        print(f"[LLM] model={HF_SUMMARY_MODEL} chars={len(answer_text)}")
-    except Exception as e:
-        # fallback: evidence-only mode
-        answer_lines = [
-            "Evidence found in the indexed filings for your question.",
-            "",
-            "Top retrieved excerpts:",
-        ]
-        for h in hits[:3]:
-            snippet = sentence_safe_snippet(h.text, max_len=320)
-            answer_lines.append(f"- {snippet} ({h.chunk_id})")
-        answer_text = "\n".join(answer_lines)
 
     t1 = time.perf_counter()
-    latency_ms = (t1 - t0) * 1000.0
+    total_ms = (t1 - t0) * 1000.0
 
-    # log (you can extend your csv later with latency)
-    log_query(req.question, req.doc_id, top_score, False, len(hits))
+    hits = out.get("hits", [])
+    top_score = float(out.get("top_score", 0.0))
+    plan = out.get("plan", None)
+
+    used_doc_id = req.doc_id
+    if not used_doc_id and plan and getattr(plan, "doc_id", None):
+        used_doc_id = plan.doc_id
+    if not used_doc_id and hits:
+        used_doc_id = hits[0].doc_id
+
+    lat = out.get("latency", {})
+    planner_ms = float(lat.get("planner_ms", 0.0))
+    retrieval_ms = float(lat.get("retrieval_ms", 0.0))
+    verifier_ms = float(lat.get("verifier_ms", 0.0))
+    summary_ms = float(lat.get("summary_ms", 0.0))
+
+    # CSV-safe logging (prevents comma issues)
+    with LOG_PATH.open("a", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow([
+            datetime.utcnow().isoformat(),
+            req.question,
+            used_doc_id or "",
+            int(req.top_k),
+            f"{top_score:.3f}",
+            str(bool(out.get("refused", True))).upper(),
+            f"{total_ms:.1f}",
+            f"{planner_ms:.1f}",
+            f"{retrieval_ms:.1f}",
+            f"{verifier_ms:.1f}",
+            f"{summary_ms:.1f}",
+        ])
+
+    if out.get("refused"):
+        return AskResponse(
+            answer="I can’t answer that reliably from the indexed filings.",
+            refused=True,
+            refusal_reason=out.get("refusal_reason", "Refused."),
+            citations=[],
+            evidence=[],
+        )
+
+    citations = [Citation(chunk_id=h.chunk_id, doc_id=h.doc_id, score=float(h.score)) for h in hits]
+    evidence = [{"chunk_id": h.chunk_id, "doc_id": h.doc_id, "score": float(h.score), "text": h.text} for h in hits]
 
     return AskResponse(
-        answer=answer_text,
+        answer=out.get("answer", ""),
         refused=False,
         refusal_reason=None,
         citations=citations,
         evidence=evidence,
     )
+
+
