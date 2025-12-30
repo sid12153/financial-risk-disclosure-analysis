@@ -142,24 +142,27 @@ if st.button("Ask", type="primary"):
     # ----------------------------
     st.subheader("Evidence Excerpts")
     evidence = data.get("evidence", [])
-
     if not evidence:
         st.write("No evidence returned.")
     else:
-        for ev in evidence:
+        for i, ev in enumerate(evidence):
             chunk_id = ev.get("chunk_id", "")
             score = float(ev.get("score", 0.0))
-
-            # Prefer cleaned text if available (from your updated API)
-            text_clean = ev.get("text_clean", "")
             text_raw = ev.get("text", "")
-            text_to_show = text_clean if text_clean else text_raw
+            text_clean = ev.get("text_clean", text_raw)
 
-            with st.expander(f"{chunk_id} (score={score:.3f})"):
-                st.write(text_to_show)
+            with st.expander(f"{chunk_id} (score={score:.3f})", expanded=False):
+                tab1, tab2 = st.tabs(["Clean", "Raw"])
+                with tab1:
+                    st.write(text_clean)
+                with tab2:
+                    st.code(text_raw)
 
-                # Optional: show raw text toggle for debugging
-                show_raw = st.checkbox(f"Show raw text for {chunk_id}", value=False, key=f"raw_{chunk_id}")
-                if show_raw and text_clean:
-                    st.text(text_raw)
-
+                # Stable keys prevent “reset” weirdness
+                st.download_button(
+                    "Download raw chunk",
+                    data=text_raw.encode("utf-8"),
+                    file_name=f"{chunk_id}.txt",
+                    mime="text/plain",
+                    key=f"dl_{chunk_id}_{i}",
+                )
