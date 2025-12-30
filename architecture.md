@@ -1,10 +1,10 @@
 # Architecture
 
-This project implements a strict evidence-first retrieval workflow for analyst-style risk and disclosure analysis of SEC 10-K filings.
+This project implements a strict evidence-first workflow for analyst-style risk and disclosure analysis of SEC 10-K filings.
 
 Core rule:
 **Every response must be grounded in retrieved excerpts from indexed filings and must include citations.**
-If the system cannot retrieve relevant evidence, it must refuse.
+If relevant evidence cannot be retrieved or verified, the system must refuse.
 
 ---
 
@@ -35,42 +35,64 @@ If the system cannot retrieve relevant evidence, it must refuse.
   - `data/processed/embeddings.faiss`
   - `data/processed/embeddings_meta.jsonl` (metadata aligned to FAISS ids)
 
-### 5) Retrieval (Question → Top-k Evidence)
-Given a user question:
-- embed query using the same embedding model
-- retrieve top-k chunk IDs from FAISS
-- optionally filter by company / year (UI selection)
-- return top chunks with scores and citations
+---
 
-### 6) API + UI Layer
-- FastAPI backend:
-  - `/sources` lists available filings
-  - `/ask` performs retrieval and returns evidence + citations
-  - `/health` health check
-- Streamlit UI:
-  - company selection
-  - question input
-  - answer panel + citations
-  - evidence excerpts display
+## Multi-Agent /ask Workflow (Current)
+
+### 5) Planner Agent (LLM)
+- Classifies intent:
+  - `risk_analysis` (in-scope)
+  - `out_of_scope` (e.g., stock predictions, trivia, personal preferences)
+- Rewrites the user question into a keyword-rich retrieval query.
+- Chooses an appropriate `top_k` (bounded range).
+
+### 6) Retrieval (FAISS)
+Given the planner’s rewritten query:
+- Embed query using the same embedding model
+- Retrieve top-k chunk IDs from FAISS (optionally filtered by `doc_id`)
+- Return chunks with similarity scores
+
+### 7) Verifier Agent (LLM)
+- Checks whether retrieved evidence is sufficient to answer from filings only.
+- Enforces refusal when:
+  - question is out-of-scope
+  - top score is below threshold
+  - evidence does not cover the requested topic
+
+### 8) Summarizer Agent (LLM)
+- Produces 3–6 bullet points in normal English
+- Uses ONLY the retrieved evidence
+- Every bullet ends with a citation `(chunk_id)`
 
 ---
 
-## Data Flow Summary
+## API + UI Layer
 
-1. PDFs → extracted text  
-2. Text → chunked JSONL  
-3. JSONL → embeddings  
-4. embeddings → FAISS index  
-5. question → retrieve top chunks  
-6. return evidence + citations (strict)
+### FastAPI
+- `/sources` lists available filings
+- `/ask` runs multi-agent workflow and returns answer + citations + evidence
+- `/health` health check
+
+### Streamlit
+- Filing selection (doc_id)
+- Question input
+- Answer panel + citations
+- Evidence excerpts (raw + cleaned display)
 
 ---
 
-## Guardrails (Planned, Day 11)
-Guardrails will enforce:
-- scope restriction (no external knowledge)
-- minimum retrieval confidence thresholds
-- refusal behavior when evidence is insufficient
-- citation formatting consistency
+## Monitoring (Current)
+- CSV query logs in `monitoring/query_log.csv`
+- Per-request latency breakdown:
+  - planner_ms, retrieval_ms, verifier_ms, summary_ms
+- Debug prints in API terminal for:
+  - planner intent + rewritten query
+  - top chunk preview and score
+  - stage-level latencies
 
-Optional later: a synthesis step that summarizes retrieved evidence while preserving strict citations.
+---
+
+## Planned (Future)
+- Arize Phoenix tracing + evaluation
+- Docker containerization
+- Production deployment (Streamlit Cloud + Docker; optional AWS EC2 for API)
