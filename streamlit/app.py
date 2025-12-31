@@ -1,7 +1,8 @@
+import os
 import requests
 import streamlit as st
 
-API_BASE = st.secrets.get("API_BASE", "http://127.0.0.1:8000")
+API_BASE = st.secrets.get("API_BASE", os.getenv("API_BASE", "http://localhost:8000"))
 
 st.set_page_config(page_title="Finance RAG (Strict)", layout="wide")
 st.title("Finance RAG (Strict, Evidence-Based)")
@@ -166,3 +167,4 @@ if st.button("Ask", type="primary"):
                     mime="text/plain",
                     key=f"dl_{chunk_id}_{i}",
                 )
+
