@@ -2,7 +2,8 @@ import os
 import requests
 import streamlit as st
 
-API_BASE = st.secrets.get("API_BASE", os.getenv("API_BASE", "http://127.0.0.1:8000"))
+# API_BASE = st.secrets.get("API_BASE", os.getenv("API_BASE", "http://api:8000"))
+API_BASE = os.getenv("API_BASE") or st.secrets.get("API_BASE") or "http://api:8000"
 
 st.set_page_config(page_title="Disclosure Intelligence", layout="wide")
 
@@ -24,19 +25,15 @@ st.markdown(
         font-size:13px;
       }
 
-      .card {
-        border:1px solid #e5e7eb;
-        border-radius:14px;
-        padding:14px;
-        margin-bottom:10px;
-        background:#ffffff;
-        color:#111827;          /* 🔴 THIS FIXES WHITE-ON-WHITE */
+      .card{
+        background: #121826;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 14px 14px;
+        margin: 10px 0;
       }
-
-      .card h4 {
-        margin:0 0 6px 0;
-        color:#111827;          /* 🔴 ENSURE HEADER IS VISIBLE */
-      }
+      .card h4{ margin: 0 0 6px 0; }
+      .muted{ opacity: 0.7; font-size: 0.9rem; }
 
       code {
         color:#1f2937;
@@ -62,11 +59,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 st.title("Financial Disclosure Intelligence")
 st.caption("Evidence-first answers from indexed SEC filings with strict refusal and citations.")
-
-st.markdown('<span class="policy-pill">✅ Zero-Hallucination Policy: Enforced (Planner + Verifier + Evidence)</span>', unsafe_allow_html=True)
+st.markdown(
+    '<span class="policy-pill">✅ Zero-Hallucination Policy: Enforced (Planner + Verifier + Evidence)</span>',
+    unsafe_allow_html=True
+)
 
 @st.cache_data(ttl=30)
 def fetch_sources():
@@ -86,8 +84,12 @@ if not docs:
     st.warning("No indexed docs found. Add filings, build chunks + FAISS index, then retry.")
     st.stop()
 
-doc_options = [d["doc_id"] for d in docs]
-doc_map = {d["doc_id"]: d for d in docs}
+# Debug (temporary): shows what keys the API returns
+# Uncomment for 10 seconds if Year/Type are blank
+# st.write("DEBUG /sources sample:", docs[0])
+
+doc_options = [d.get("doc_id", "") for d in docs if d.get("doc_id")]
+meta_map = {d["doc_id"]: d for d in docs if d.get("doc_id")}
 
 # ---- Two-panel layout ----
 left, right = st.columns([1, 2], gap="large")
@@ -95,15 +97,29 @@ left, right = st.columns([1, 2], gap="large")
 with left:
     st.subheader("Query")
     selected_doc = st.selectbox("Filing", doc_options, index=0)
-    meta = doc_map.get(selected_doc, {})
 
-    st.markdown(f"**Company:** {meta.get('company','')}  \n**Year:** {meta.get('year','')}  \n**Type:** {meta.get('type','')}")
-    st.caption(meta.get("filename",""))
+    meta = meta_map.get(selected_doc, {})
+    company = meta.get("company") or "—"
+    year = meta.get("filing_year") or "—"
+    ftype = meta.get("filing_type") or "—"
+    fname = meta.get("filename") or ""
 
-    question = st.text_area("Question", value="What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?", height=110)
+    st.markdown(
+        f"**Company:** {company}  \n"
+        f"**Year:** {year}  \n"
+        f"**Type:** {ftype}"
+    )
+    if fname:
+        st.caption(fname)
+
+    question = st.text_area(
+        "Question",
+        value="What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?",
+        height=110
+    )
     top_k = st.slider("Top-K evidence chunks", 3, 10, 5, 1)
-
     ask_clicked = st.button("Run", use_container_width=True)
+
 
 with right:
     st.subheader("Results")
@@ -130,11 +146,28 @@ with right:
         evidence = data.get("evidence", []) or []
 
         # --- KPIs (minimal + relevant) ---
+        status = "REFUSED" if refused else "ANSWERED"
+        status_color = "#ff4b4b" if refused else "#2ecc71"  # red / green
+
         k1, k2, k3 = st.columns(3)
-        k1.markdown(f"<div class='kpi'>{'REFUSED' if refused else 'ANSWERED'}</div><div class='kpi-label'>Status</div>", unsafe_allow_html=True)
+        k1.markdown(
+            f"<div style='font-size:28px;font-weight:800;color:{status_color}'>{status}</div>"
+            f"<div class='kpi-label'>Status</div>",
+            unsafe_allow_html=True
+        )
+
         top_score = float(citations[0]["score"]) if citations else 0.0
-        k2.markdown(f"<div class='kpi'>{top_score:.3f}</div><div class='kpi-label'>Top score</div>", unsafe_allow_html=True)
-        k3.markdown(f"<div class='kpi'>{len(evidence)}</div><div class='kpi-label'>Evidence chunks</div>", unsafe_allow_html=True)
+        k2.markdown(
+            f"<div style='font-size:28px;font-weight:800'>{top_score:.3f}</div>"
+            f"<div class='kpi-label'>Top score</div>",
+            unsafe_allow_html=True
+        )
+
+        k3.markdown(
+            f"<div style='font-size:28px;font-weight:800'>{len(evidence)}</div>"
+            f"<div class='kpi-label'>Evidence chunks</div>",
+            unsafe_allow_html=True
+        )
 
         st.divider()
 
@@ -148,8 +181,8 @@ with right:
             st.write(data.get("answer", ""))
 
             st.markdown("### Sources")
-            # Show “source cards” (finance-friendly), chunk_id is secondary
-            for ev in evidence[:min(len(evidence), 5)]:
+
+            for i, ev in enumerate(evidence[: min(len(evidence), 5)]):
                 chunk_id = ev.get("chunk_id", "")
                 score = float(ev.get("score", 0.0))
                 text_raw = ev.get("text", "") or ""
@@ -158,14 +191,16 @@ with right:
                 st.markdown(
                     f"""
                     <div class="card">
-                      <h4>Evidence excerpt</h4>
-                      <div class="muted">Chunk: <code>{chunk_id}</code> · score={score:.3f}</div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <h4 style="margin:0;">Evidence excerpt</h4>
+                        <div class="muted">score={score:.3f}</div>
+                      </div>
+                      <div class="muted" style="margin-top:6px;">Chunk: <code>{chunk_id}</code></div>
                     </div>
                     """,
-                    unsafe_allow_html=True,
+                    unsafe_allow_html=True
                 )
 
-                # Tabs inside expander is the stable thing you observed
                 with st.expander("View excerpt", expanded=False):
                     tab1, tab2 = st.tabs(["Clean", "Raw"])
                     with tab1:
@@ -174,9 +209,10 @@ with right:
                         st.code(text_raw)
 
                     st.download_button(
-                        "Download raw excerpt",
+                        "Download raw chunk",
                         data=text_raw.encode("utf-8"),
                         file_name=f"{chunk_id}.txt",
                         mime="text/plain",
-                        key=f"dl_{chunk_id}",
+                        key=f"dl_{chunk_id}_{i}",
+                        use_container_width=True,
                     )
