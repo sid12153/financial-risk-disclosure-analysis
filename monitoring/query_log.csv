@@ -1,0 +1,11 @@
+ts,question,doc_id,top_k,top_score,refused,total_ms,planner_ms,retrieval_ms,verifier_ms,summary_ms
+2025-12-30T19:00:07.730151,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,10608.4,3838.8,2334.8,902.4,3514.9
+2025-12-30T21:54:06.763785,what earnings are disclosed,GoldmanSachs_2023_10K,5,0.558,FALSE,10931.0,3786.6,1800.6,1274.7,4067.0
+2025-12-30T22:57:11.767610,What will the stock price be next year?,GoldmanSachs_2023_10K,5,0.000,TRUE,3533.9,3530.3,0.0,0.0,0.0
+2025-12-30T23:12:40.064788+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,11655.0,4166.3,2646.9,1039.8,3789.3
+2025-12-30T23:13:05.450978+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,9,0.629,FALSE,9442.1,3712.8,1479.2,969.0,3276.6
+2025-12-31T06:15:28.297807+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,12298.8,4241.3,1870.2,997.3,5182.9
+2025-12-31T06:15:45.864231+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,9652.0,3559.6,35.8,1036.8,5018.0
+2025-12-31T06:16:31.794312+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,7327.4,3500.2,33.6,962.6,2828.4
+2025-12-31T06:23:41.764174+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,10219.4,3966.3,1629.9,1119.8,3500.9
+2025-12-31T06:23:57.345517+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,9050.5,3482.8,104.4,1116.8,4344.9
