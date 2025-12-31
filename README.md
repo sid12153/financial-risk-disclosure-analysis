@@ -13,7 +13,7 @@ A core goal is **reliability over fluency**: the system is designed to refuse ou
 
 ---
 
-## Current Status (Day 13 — Multi-Agent Evidence RAG)
+## Current Status (Day 14 — Multi-Agent Evidence RAG)
 
 The current version implements a strict evidence-first workflow:
 
@@ -23,7 +23,7 @@ The current version implements a strict evidence-first workflow:
 - A FAISS index is built and stored in `data/processed/embeddings.faiss`
 - `/ask` runs a **multi-agent workflow** that enforces scope + evidence sufficiency
 - Responses include chunk-level citations and the system refuses when evidence is weak or the question is out-of-scope
-
+- 
 ---
 
 ## Multi-Agent Workflow (LLM + Retrieval)
@@ -91,6 +91,21 @@ The UI supports viewing both cleaned excerpts and raw chunk text.
 These constraints are intentional and reflect compliance-style workflows where traceability matters more than free-form generation.
 
 ---
+
+## Zero-Hallucination Policy (Enforced)
+
+✅ **Zero-Hallucination Policy: Enforced**  
+This system refuses any question that cannot be supported by retrieved evidence from indexed SEC filings.
+
+**Enforcement points**
+- **Planner (Mistral)** rejects out-of-scope questions (e.g., stock price prediction, CEO trivia).
+- **Verifier (Llama)** rejects weak or irrelevant evidence.
+- **Summarizer (Llama)** writes answers using only retrieved excerpts and **requires chunk citations** per bullet.
+
+**Guarantees**
+- If not refused, the response includes:
+  - chunk-level citations (`doc_id::chunk_id`)
+  - returned evidence excerpts in the API payload
 
 ## Project Structure
 
