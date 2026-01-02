@@ -51,6 +51,12 @@ class AskResponse(BaseModel):
     refusal_reason: Optional[str] = None
     citations: List[Citation]
     evidence: List[Dict[str, Any]]  # includes chunk text for transparency
+    # Latency metrics (ms)
+    total_ms: Optional[float] = None
+    planner_ms: Optional[float] = None
+    retrieval_ms: Optional[float] = None
+    verifier_ms: Optional[float] = None
+    summary_ms: Optional[float] = None
 
 def clean_excerpt(s: str) -> str:
     return " ".join(s.replace("\u00a0", " ").split())
@@ -239,6 +245,11 @@ def ask(req: AskRequest) -> AskResponse:
             refusal_reason=out.get("refusal_reason", "Refused."),
             citations=[],
             evidence=[],
+            total_ms=round(total_ms, 1),
+            planner_ms=round(planner_ms, 1),
+            retrieval_ms=round(retrieval_ms, 1),
+            verifier_ms=round(verifier_ms, 1),
+            summary_ms=round(summary_ms, 1),
         )
 
     citations = [Citation(chunk_id=h.chunk_id, doc_id=h.doc_id, score=float(h.score)) for h in hits]
@@ -246,10 +257,15 @@ def ask(req: AskRequest) -> AskResponse:
 
     return AskResponse(
         answer=out.get("answer", ""),
+
         refused=False,
         refusal_reason=None,
         citations=citations,
         evidence=evidence,
+
+        total_ms=round(total_ms, 1),
+        planner_ms=round(planner_ms, 1),
+        retrieval_ms=round(retrieval_ms, 1),
+        verifier_ms=round(verifier_ms, 1),
+        summary_ms=round(summary_ms, 1),
     )
-
-
