@@ -42,17 +42,24 @@ st.markdown(
         border-radius:4px;
         font-size:12px;
       }
-
       .kpi {
-        font-size:20px;
-        font-weight:700;
-        color:#111827;
+          font-size: 1.6rem;
+          font-weight: 600;
+          color: #f1f5f9;  /* light gray / near-white */
+          margin-bottom: 0.15rem;
       }
 
       .kpi-label {
-        color:#6b7280;
-        font-size:12px;
-        margin-top:-2px;
+          font-size: 0.75rem;
+          color: #9ca3af;  /* muted gray */
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+      }
+
+      /* Optional: subtle card feel without white boxes */
+      .kpi-wrap {
+          padding: 0.6rem 0.2rem;
+          border-left: 3px solid rgba(255,255,255,0.08);
       }
     </style>
     """,
@@ -136,6 +143,8 @@ with right:
                     st.code(resp.text)
                     st.stop()
                 data = resp.json()
+                # st.caption(f"API_BASE = {API_BASE}")
+                # st.code(str(list(data.keys())))
             except Exception as e:
                 st.error("Ask request failed.")
                 st.write(str(e))
@@ -146,26 +155,42 @@ with right:
         evidence = data.get("evidence", []) or []
 
         # --- KPIs (minimal + relevant) ---
-        status = "REFUSED" if refused else "ANSWERED"
-        status_color = "#ff4b4b" if refused else "#2ecc71"  # red / green
+        k1, k2, k3, k4 = st.columns(4)
 
-        k1, k2, k3 = st.columns(3)
+        status = "REFUSED" if refused else "ANSWERED"
+        status_color = "#ff4b4b" if refused else "#2ecc71"
+
+        top_score = float(citations[0]["score"]) if citations else 0.0
+
+        # traceability
+        unique_citations = len({c["chunk_id"] for c in citations}) if citations else 0
+        retrieved_chunks = len(evidence)
+
+        # latency (if you don’t return it yet, show “—”)
+        latency = data.get("total_ms")
+        latency_str = f"{float(latency):.0f} ms" if latency is not None else "—"
+
         k1.markdown(
-            f"<div style='font-size:28px;font-weight:800;color:{status_color}'>{status}</div>"
-            f"<div class='kpi-label'>Status</div>",
+            f"<div class='kpi' style='color:{status_color}'>{status}</div>"
+            f"<div class='kpi-label'>Decision (Policy)</div>",
             unsafe_allow_html=True
         )
 
-        top_score = float(citations[0]["score"]) if citations else 0.0
         k2.markdown(
-            f"<div style='font-size:28px;font-weight:800'>{top_score:.3f}</div>"
-            f"<div class='kpi-label'>Top score</div>",
+            f"<div class='kpi'>{top_score:.3f}</div>"
+            f"<div class='kpi-label'>Evidence strength</div>",
             unsafe_allow_html=True
         )
 
         k3.markdown(
-            f"<div style='font-size:28px;font-weight:800'>{len(evidence)}</div>"
-            f"<div class='kpi-label'>Evidence chunks</div>",
+            f"<div class='kpi'>{unique_citations}</div>"
+            f"<div class='kpi-label'>Traceability (citations)</div>",
+            unsafe_allow_html=True
+        )
+
+        k4.markdown(
+            f"<div class='kpi'>{latency_str}</div>"
+            f"<div class='kpi-label'>Latency (E2E)</div>",
             unsafe_allow_html=True
         )
 
