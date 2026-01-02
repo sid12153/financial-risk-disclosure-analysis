@@ -1,122 +1,213 @@
 ![Zero Hallucination Policy](https://img.shields.io/badge/Zero--Hallucination-Policy%20Enforced-brightgreen)
+![Dockerized](https://img.shields.io/badge/Docker-Containerized-blue)
+![Tracing](https://img.shields.io/badge/Observability-Arize%20Phoenix-orange)
 
-**All responses are either fully cited from source filings or explicitly refused.  
-Unit tests enforce refusal for out-of-scope queries (e.g., stock price predictions).**
-
-# Financial Risk and Disclosure Q&A from SEC Filings (Strict, Evidence-Grounded)
-
-Analysts and consultants often need to read long financial filings to understand a company’s risks, regulatory exposure, and forward-looking concerns. These documents are dense, repetitive, and time-consuming to analyze, especially when comparing disclosures across companies.
-
-This project turns SEC filings (10-K and later 10-Q) into a **queryable evidence base**. Users ask analyst-style questions, and the system returns concise answers that are explicitly grounded in retrieved excerpts, with chunk-level citations.
-
-A core goal is **reliability over fluency**: the system is designed to refuse out-of-scope questions and avoid unsupported generation.
+**Evidence-first financial intelligence over SEC filings.  
+Every answer is cited or refused.**
 
 ---
 
-## Current Status (Day 14 — Multi-Agent Evidence RAG)
+# Financial Disclosure Intelligence  
+**A zero-hallucination, multi-agent RAG system for SEC filings**
 
-The current version implements a strict evidence-first workflow:
+Analysts, risk teams, and compliance professionals rely on large SEC filings (10-K, 10-Q) to understand regulatory exposure, capital constraints, and material risks. These documents are long, repetitive, and difficult to interrogate programmatically.
 
-- PDFs are parsed from `data/raw`
-- Text is chunked and stored in `data/processed/chunks.jsonl`
-- Embeddings are generated using `sentence-transformers/all-MiniLM-L6-v2`
-- A FAISS index is built and stored in `data/processed/embeddings.faiss`
-- `/ask` runs a **multi-agent workflow** that enforces scope + evidence sufficiency
-- Responses include chunk-level citations and the system refuses when evidence is weak or the question is out-of-scope
-- 
----
+This project implements a **production-style evidence retrieval system** that allows users to ask analyst-style questions and receive **strictly grounded answers** — or an explicit refusal when evidence is insufficient.
 
-## Multi-Agent Workflow (LLM + Retrieval)
+The system is designed around one principle:
 
-This project uses a small, production-style multi-agent pipeline to enforce a strict policy.
-
-1) **Planner Agent (Mistral via Hugging Face Inference API)**
-- Classifies intent: in-scope vs out-of-scope  
-- Rewrites the question into a retrieval-friendly query  
-- Chooses an appropriate `top_k` (bounded)
-
-2) **Retriever (FAISS)**
-- Retrieves top-k evidence chunks from indexed filings
-- Returns similarity scores and chunk IDs
-
-3) **Verifier Agent (Llama via Hugging Face Inference API)**
-- Blocks answers when:
-  - question is out-of-scope (stock predictions, trivia, personal preferences, etc.)
-  - retrieval confidence is below threshold
-  - evidence does not cover the requested topic
-
-4) **Summarizer Agent (Llama via Hugging Face Inference API)**
-- Produces 3–6 bullet points
-- Uses only retrieved evidence
-- Every bullet ends with a citation like `(chunk_id)`
+> **If the answer cannot be proven from the filings, it must not be generated.**
 
 ---
 
-## Guardrails and Monitoring (Current)
+## What This System Guarantees
 
-- **Retrieval confidence gating**: the API refuses if the top retrieval score is below `MIN_RETRIEVAL_SCORE`.
-- **Scope enforcement**: the Planner/Verifier refuse out-of-scope questions by design.
-- **Evidence-only answers**: the summarizer is instructed to use only evidence excerpts and include chunk citations.
-- **Query logging**: requests are logged to `monitoring/query_log.csv`, including:
-  - top retrieval score
-  - refusal outcome
-  - end-to-end latency
-  - planner / retrieval / verifier / summarizer latency breakdown (ms)
+- Answers are derived **only from retrieved filing excerpts**
+- Every answer includes **chunk-level citations**
+- Out-of-scope or speculative questions are **refused by policy**
+- Each decision is **observable, traceable, and testable**
 
-Planned next: Arize Phoenix tracing for end-to-end observability.
+This mirrors how real-world financial and compliance systems must behave.
 
 ---
 
-## Evidence Presentation
+## Current Status (Day 14)
 
-Retrieved excerpts are post-processed for readability while preserving source fidelity.
-The UI supports viewing both cleaned excerpts and raw chunk text.
+The system is now fully **containerized, observable, and policy-enforced**:
+
+- Multi-agent RAG pipeline (Planner → Retriever → Verifier → Summarizer)
+- FAISS-based semantic retrieval
+- Strict refusal logic enforced by agents and unit tests
+- Dockerized API and UI using Docker Compose
+- Distributed tracing and latency analysis via **Arize Phoenix**
+- Frontend KPIs exposing decision and evidence quality
 
 ---
 
-## Scope: What This Can and Cannot Answer
+## Multi-Agent Architecture
 
-### In scope (designed to answer)
-- Risk factors and regulatory exposure
-- Capital and liquidity disclosures
-- Resolution planning and TLAC references (when present in evidence)
-- Segment-level metrics and reported figures (when present in evidence)
-- Policy language and compliance-related disclosures explicitly stated in filings
+Each `/ask` request runs as a **single traced workflow** with distinct decision stages.
 
-### Out of scope (designed to refuse)
-- Stock price predictions or “next year” price targets
-- Personal preferences (e.g., “CEO’s favorite food”)
-- Any claim not supported by retrieved filing excerpts
+### 1. Planner Agent (Mistral – Hugging Face Inference API)
+- Classifies intent: **in-scope vs out-of-scope**
+- Rewrites the query into a retrieval-optimized form
+- Dynamically selects top-k evidence size
 
-These constraints are intentional and reflect compliance-style workflows where traceability matters more than free-form generation.
+Questions such as:
+- *“What will the stock price be next year?”*  
+are refused at this stage.
+
+---
+
+### 2. Retriever (FAISS)
+- Embeds the rewritten query
+- Retrieves top-k filing chunks using cosine similarity
+- Returns similarity scores and chunk identifiers
+
+Retrieval latency is measured independently.
+
+---
+
+### 3. Verifier Agent (Llama – Hugging Face Inference API)
+- Evaluates evidence sufficiency
+- Refuses if:
+  - similarity score is below threshold
+  - evidence does not cover the topic
+  - planner intent was borderline
+
+This stage prevents semantic false positives.
+
+---
+
+### 4. Summarizer Agent (Llama – Hugging Face Inference API)
+- Produces **3–6 concise bullet points**
+- Uses **only retrieved evidence**
+- Every bullet ends with a citation `(doc_id::chunk_id)`
+- Explicitly refuses if evidence is insufficient
 
 ---
 
 ## Zero-Hallucination Policy (Enforced)
 
-✅ **Zero-Hallucination Policy: Enforced**  
-This system refuses any question that cannot be supported by retrieved evidence from indexed SEC filings.
+This system enforces a **hard guarantee**:
 
-**Enforcement points**
-- **Planner (Mistral)** rejects out-of-scope questions (e.g., stock price prediction, CEO trivia).
-- **Verifier (Llama)** rejects weak or irrelevant evidence.
-- **Summarizer (Llama)** writes answers using only retrieved excerpts and **requires chunk citations** per bullet.
+**Either:**
+- the answer is fully grounded and cited  
+**or**
+- the system refuses to answer
 
-**Guarantees**
-- If not refused, the response includes:
-  - chunk-level citations (`doc_id::chunk_id`)
-  - returned evidence excerpts in the API payload
+### Enforcement Layers
+- Planner intent classification
+- Retrieval confidence threshold
+- Verifier evidence checks
+- Summarizer evidence-only prompt
+- Unit tests that fail on hallucination
+
+A test explicitly asserts that **stock price predictions must be refused**.
+
+---
+
+## Observability and Monitoring (Added Day 13–14)
+
+### Distributed Tracing (Arize Phoenix)
+Each `/ask` request generates:
+- One root trace
+- Child spans for:
+  - planner
+  - retrieval
+  - verifier
+  - summarizer
+
+Phoenix exposes:
+- End-to-end latency (P50 / P99)
+- Per-agent latency
+- Refusal stage attribution
+- Evidence score distributions
+
+### Runtime Metrics
+The API logs:
+- top retrieval score
+- refusal outcome
+- total latency
+- per-stage latency:
+  - planner_ms
+  - retrieval_ms
+  - verifier_ms
+  - summary_ms
+
+These metrics are visible both in logs and Phoenix traces.
+
+---
+
+## Frontend Decision KPIs
+
+The Streamlit UI surfaces **decision-relevant KPIs**, not vanity metrics:
+
+- **Decision (ANSWERED / REFUSED)** — policy outcome
+- **Evidence Strength** — top similarity score
+- **Traceability** — number of cited evidence chunks
+- **Latency (E2E)** — end-to-end request time
+
+This allows users to assess **confidence, traceability, and cost** at a glance.
+
+---
+
+## Containerization (Added Day 14)
+
+The system is fully containerized using **Docker Compose**:
+
+- `api` service: FastAPI + FAISS + agents
+- `ui` service: Streamlit frontend
+- Environment-based configuration
+- Service-to-service networking (`api:8000`)
+
+This enables:
+- reproducible local runs
+- production-style deployment
+- clean separation of concerns
+
+---
+
+## Scope and Constraints
+
+### Designed to Answer
+- Regulatory and compliance risks
+- Capital and liquidity disclosures
+- Resolution planning and TLAC (when present)
+- Reported financial figures explicitly stated in filings
+- Risk factor language
+
+### Designed to Refuse
+- Stock price predictions or targets
+- Speculative or forward-looking claims
+- Personal trivia
+- Any statement not supported by retrieved evidence
+
+---
+
+## Dataset
+
+Currently indexed filings:
+- Goldman Sachs — 2023 Form 10-K (1,789 chunks)
+- JPMorgan Chase — 2023 Form 10-K (1,408 chunks)
+- Morgan Stanley — 2023 Form 10-K (637 chunks)
+
+Total: **3,834 evidence chunks**
+
+Processed chunks are stored in `data/processed/chunks.jsonl` (3,834 chunks across 3 filings).
+
+---
 
 ## Project Structure
 
-- `api/` – FastAPI backend (retrieval + multi-agent guardrails + strict responses)
-- `api/rag/` – retrieval store, HF LLM client, and multi-agent orchestration
-- `streamlit/` – Streamlit UI for querying filings and reviewing evidence
-- `data/raw/` – raw SEC filing PDFs (local only)
-- `data/processed/` – chunk store + embeddings + FAISS index
-- `monitoring/` – query logs for debugging and monitoring
-- `architecture.md` – system design and data flow
-- `data_sources.md` – documents used and scope
+- `api/` – FastAPI application
+- `api/rag/` – FAISS store, HF client, agent orchestration
+- `streamlit/` – Analyst-facing UI
+- `data/raw/` – Raw SEC PDFs
+- `data/processed/` – Chunks, embeddings, FAISS index
+- `monitoring/` – Logs and traces
+- `architecture.md` – Detailed system design
+- `data_sources.md` – Filing scope and provenance
 
 ---
 
@@ -130,14 +221,6 @@ Each chunk stores:
 - filing year and type
 - deterministic chunk ID
 - chunk text and length
-
-Current dataset:
-- Goldman Sachs 2023 10-K (1,789 chunks)
-- JPMorgan Chase 2023 10-K (1,408 chunks)
-- Morgan Stanley 2023 10-K (637 chunks)
-
-Processed chunks are stored in `data/processed/chunks.jsonl` (3,834 chunks across 3 filings).
-
 ---
 
 ## How to Run Locally
