@@ -1,6 +1,10 @@
-![Zero Hallucination Policy](https://img.shields.io/badge/Zero--Hallucination-Policy%20Enforced-brightgreen)
-![Dockerized](https://img.shields.io/badge/Docker-Containerized-blue)
-![Tracing](https://img.shields.io/badge/Observability-Arize%20Phoenix-orange)
+![Zero Hallucination Policy](https://img.shields.io/badge/Policy-Zero%20Hallucination-brightgreen)
+![Multi-Agent](https://img.shields.io/badge/Architecture-Multi--Agent-blue)
+![LLM](https://img.shields.io/badge/LLM-Mistral%20%7C%20LLaMA-orange)
+![Vector Search](https://img.shields.io/badge/Retrieval-FAISS-purple)
+![Dockerized](https://img.shields.io/badge/Deployment-Docker-blue)
+![Tracing](https://img.shields.io/badge/Observability-Arize%20Phoenix-red)
+![AWS](https://img.shields.io/badge/Cloud-AWS%20EC2-yellow)
 
 **Evidence-first financial intelligence over SEC filings.  
 Every answer is cited or refused.**
