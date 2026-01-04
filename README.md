@@ -7,7 +7,7 @@
 ![Cloud](https://img.shields.io/badge/Cloud-AWS%20EC2-yellow)
 
 **Evidence-first financial intelligence over SEC filings.  
-Every answer is cited — or explicitly refused.**
+Every answer is cited or explicitly refused.**
 
 ---
 
@@ -178,9 +178,9 @@ Screenshot:
 ## Dataset
 
 Indexed filings:
-- Goldman Sachs — 2023 Form 10-K
-- JPMorgan Chase — 2023 Form 10-K
-- Morgan Stanley — 2023 Form 10-K
+- Goldman Sachs - 2023 Form 10-K
+- JPMorgan Chase - 2023 Form 10-K
+- Morgan Stanley - 2023 Form 10-K
 
 Total evidence chunks: **3,834**
 
