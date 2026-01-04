@@ -7,20 +7,37 @@ Each asset corresponds to a concrete capability of the Financial Disclosure Inte
 
 ---
 
-## Screenshot Index
+assets/
 
-assets/screenshots/
-├── home_UI.jpg
-├── answer_1.jpg
-├── answer_2.jpg
-├── answer_3.jpg
-├── refusal.jpg
-├── phoenix_kpi.jpg
-├── phoenix_trace.jpg
-├── metrics_report.jpg
-├── docker_compose.jpg
-├── docker_logs.jpg
-└── aws_inbound_rules.jpg
+├── screenshots/
+
+│   ├── home_UI.jpg
+
+│   ├── answer_1.jpg
+
+│   ├── answer_2.jpg
+
+│   ├── answer_3.jpg
+
+│   ├── refusal.jpg
+
+│   ├── phoenix_kpi.jpg
+
+│   ├── phoenix_trace.jpg
+
+│   ├── metrics_report.jpg
+
+│   ├── docker_compose.jpg
+
+│   ├── docker_logs.jpg
+
+│   └── aws_inbound_rules.jpg
+
+├── assets.md
+
+└── screenshots/
+
+    └── ss.md
 
 
 ---
