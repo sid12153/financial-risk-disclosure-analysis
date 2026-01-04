@@ -12,14 +12,14 @@ transparent evaluation and explainability.
 
 data/
 ├── raw/
-│ ├── GoldmanSachs_2023_10K.pdf
-│ ├── JPMorganChase_2023_10K.pdf
-│ └── MorganStanley_2023_10K.pdf
-│
-└── processed/
-  ├── chunks.jsonl
-  ├── embeddings_meta.jsonl
-  └── embeddings.faiss
+│   ├── GoldmanSachs_2023_10K.pdf
+│   ├── JPMorganChase_2023_10K.pdf
+│   └── MorganStanley_2023_10K.pdf
+├── processed/
+│   ├── chunks.jsonl
+│   ├── embeddings_meta.jsonl
+│   └── embeddings.faiss
+└── README.md
 
 
 ---
