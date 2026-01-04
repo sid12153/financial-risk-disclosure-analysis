@@ -37,7 +37,7 @@ assets/
 
 └── screenshots/
 
-    └── ss.md
+|   └── ss.md
 
 
 ---
