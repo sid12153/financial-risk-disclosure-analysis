@@ -3,119 +3,97 @@
 ![LLM](https://img.shields.io/badge/LLM-Mistral%20%7C%20LLaMA-orange)
 ![Vector Search](https://img.shields.io/badge/Retrieval-FAISS-purple)
 ![Dockerized](https://img.shields.io/badge/Deployment-Docker-blue)
-![Tracing](https://img.shields.io/badge/Observability-Arize%20Phoenix-red)
-![AWS](https://img.shields.io/badge/Cloud-AWS%20EC2-yellow)
+![Observability](https://img.shields.io/badge/Observability-Arize%20Phoenix-red)
+![Cloud](https://img.shields.io/badge/Cloud-AWS%20EC2-yellow)
 
 **Evidence-first financial intelligence over SEC filings.  
-Every answer is cited or refused.**
+Every answer is cited — or explicitly refused.**
 
 ---
 
 # Financial Disclosure Intelligence  
-**A zero-hallucination, multi-agent RAG system for SEC filings**
+### Zero-hallucination, multi-agent RAG system for SEC 10-K filings
 
-Analysts, risk teams, and compliance professionals rely on large SEC filings (10-K, 10-Q) to understand regulatory exposure, capital constraints, and material risks. These documents are long, repetitive, and difficult to interrogate programmatically.
+Financial analysts, risk teams, and compliance professionals rely on long SEC filings (10-K) to assess regulatory exposure, capital constraints, and material risks. These documents are difficult to interrogate reliably using traditional search or generic LLMs.
 
-This project implements a **production-style evidence retrieval system** that allows users to ask analyst-style questions and receive **strictly grounded answers** — or an explicit refusal when evidence is insufficient.
+This project implements a **production-style Retrieval-Augmented Generation (RAG) system** that answers analyst-style questions **only when sufficient evidence exists**, and **refuses** otherwise.
 
-The system is designed around one principle:
-
-> **If the answer cannot be proven from the filings, it must not be generated.**
+> **If the answer cannot be proven from filings, it must not be generated.**
 
 ---
 
-## What This System Guarantees
+## Core Guarantees
 
-- Answers are derived **only from retrieved filing excerpts**
+- Answers are grounded **only in retrieved SEC filing excerpts**
 - Every answer includes **chunk-level citations**
 - Out-of-scope or speculative questions are **refused by policy**
 - Each decision is **observable, traceable, and testable**
 
-This mirrors how real-world financial and compliance systems must behave.
+This mirrors real financial and compliance systems.
 
 ---
 
-## Current Status (Day 14)
+## System Architecture (Multi-Agent RAG)
 
-The system is now fully **containerized, observable, and policy-enforced**:
+Each `/ask` request executes as a **fully traced workflow**:
 
-- Multi-agent RAG pipeline (Planner → Retriever → Verifier → Summarizer)
-- FAISS-based semantic retrieval
-- Strict refusal logic enforced by agents and unit tests
-- Dockerized API and UI using Docker Compose
-- Distributed tracing and latency analysis via **Arize Phoenix**
-- Frontend KPIs exposing decision and evidence quality
+### 1. Planner Agent (Mistral – Hugging Face)
+- Classifies intent (in-scope vs out-of-scope)
+- Rewrites the query for retrieval
+- Dynamically selects evidence size (top-k)
 
----
-
-## Multi-Agent Architecture
-
-Each `/ask` request runs as a **single traced workflow** with distinct decision stages.
-
-### 1. Planner Agent (Mistral – Hugging Face Inference API)
-- Classifies intent: **in-scope vs out-of-scope**
-- Rewrites the query into a retrieval-optimized form
-- Dynamically selects top-k evidence size
-
-Questions such as:
-- *“What will the stock price be next year?”*  
-are refused at this stage.
+Speculative questions (e.g., stock price predictions) are rejected early.
 
 ---
 
 ### 2. Retriever (FAISS)
-- Embeds the rewritten query
-- Retrieves top-k filing chunks using cosine similarity
-- Returns similarity scores and chunk identifiers
+- Embeds rewritten queries
+- Performs semantic search over SEC filing chunks
+- Returns top-k chunks with similarity scores
 
 Retrieval latency is measured independently.
 
 ---
 
-### 3. Verifier Agent (Llama – Hugging Face Inference API)
-- Evaluates evidence sufficiency
-- Refuses if:
-  - similarity score is below threshold
-  - evidence does not cover the topic
-  - planner intent was borderline
-
-This stage prevents semantic false positives.
+### 3. Verifier Agent (LLaMA – Hugging Face)
+- Validates evidence sufficiency
+- Refuses when similarity or coverage is inadequate
+- Prevents semantic false positives
 
 ---
 
-### 4. Summarizer Agent (Llama – Hugging Face Inference API)
-- Produces **3–6 concise bullet points**
+### 4. Summarizer Agent (LLaMA – Hugging Face)
+- Produces concise bullet-point answers
 - Uses **only retrieved evidence**
-- Every bullet ends with a citation `(doc_id::chunk_id)`
-- Explicitly refuses if evidence is insufficient
+- Enforces citation per bullet `(doc_id::chunk_id)`
+- Refuses if evidence is insufficient
 
 ---
 
 ## Zero-Hallucination Policy (Enforced)
 
-This system enforces a **hard guarantee**:
+The system guarantees **one of two outcomes**:
 
-**Either:**
-- the answer is fully grounded and cited  
-**or**
-- the system refuses to answer
+- ✔️ Grounded, cited answer  
+- ❌ Explicit refusal with explanation
 
 ### Enforcement Layers
-- Planner intent classification
-- Retrieval confidence threshold
-- Verifier evidence checks
-- Summarizer evidence-only prompt
-- Unit tests that fail on hallucination
+- Planner intent filtering  
+- Retrieval confidence thresholds  
+- Verifier evidence checks  
+- Evidence-only summarization prompts  
+- Unit tests asserting refusal behavior  
 
-A test explicitly asserts that **stock price predictions must be refused**.
+A dedicated test asserts that **stock-price predictions must be refused**.
 
 ---
 
-## Observability and Monitoring (Added Day 13–14)
+## Observability and Monitoring
 
 ### Distributed Tracing (Arize Phoenix)
-Each `/ask` request generates:
-- One root trace
+
+Each request generates:
+- Root trace
 - Child spans for:
   - planner
   - retrieval
@@ -123,93 +101,105 @@ Each `/ask` request generates:
   - summarizer
 
 Phoenix exposes:
-- End-to-end latency (P50 / P99)
-- Per-agent latency
+- End-to-end latency (P50 / P95 / P99)
+- Per-stage latency breakdown
 - Refusal stage attribution
 - Evidence score distributions
 
-### Runtime Metrics
-The API logs:
-- top retrieval score
-- refusal outcome
-- total latency
-- per-stage latency:
-  - planner_ms
-  - retrieval_ms
-  - verifier_ms
-  - summary_ms
-
-These metrics are visible both in logs and Phoenix traces.
+**Screenshots**
+- `assets/screenshots/phoenix_kpi.jpg`
+- `assets/screenshots/phoenix_trace.jpg`
 
 ---
 
-## Frontend Decision KPIs
+### Runtime Metrics (From Production Logs)
 
-The Streamlit UI surfaces **decision-relevant KPIs**, not vanity metrics:
+Metrics are logged per request and summarized via `scripts/metrics_report.py`.
 
-- **Decision (ANSWERED / REFUSED)** — policy outcome
-- **Evidence Strength** — top similarity score
-- **Traceability** — number of cited evidence chunks
-- **Latency (E2E)** — end-to-end request time
+**Observed Metrics (Sample Run)**
 
-This allows users to assess **confidence, traceability, and cost** at a glance.
+- Requests: **10**
+- Refusal rate: **10%**
+- End-to-end latency:
+  - P50: **9.9s**
+  - P95: **12.0s**
+  - P99: **12.2s**
+- Mean retrieval similarity score: **0.56**
+- Median retrieval similarity score: **0.63**
+
+Latency by stage (P50):
+- Planner: **3.7s**
+- Retrieval: **1.6s**
+- Verifier: **1.0s**
+- Summarizer: **3.6s**
+
+Screenshot:
+- `assets/screenshots/metrics_report.jpg`
 
 ---
 
-## Containerization (Added Day 14)
+## Frontend Decision KPIs (Streamlit)
+
+The UI surfaces **decision-relevant KPIs**, not vanity metrics:
+
+- Decision: ANSWERED or REFUSED
+- Evidence strength (top similarity score)
+- Citation count
+- End-to-end latency
+
+Screenshots:
+- `assets/screenshots/home_UI.jpg`
+- `assets/screenshots/answer_1.jpg`
+- `assets/screenshots/refusal.jpg`
+
+---
+
+## Containerization and Deployment
 
 The system is fully containerized using **Docker Compose**:
 
-- `api` service: FastAPI + FAISS + agents
-- `ui` service: Streamlit frontend
-- Environment-based configuration
-- Service-to-service networking (`api:8000`)
+- `api`: FastAPI + FAISS + agents
+- `ui`: Streamlit frontend
+- `phoenix`: Observability backend
 
-This enables:
-- reproducible local runs
-- production-style deployment
-- clean separation of concerns
+Deployment was validated on **AWS EC2**.
 
----
+### Exposed Ports
+- 22 – SSH
+- 8000 – FastAPI
+- 8501 – Streamlit UI
+- 6006 – Phoenix UI
 
-## Scope and Constraints
-
-### Designed to Answer
-- Regulatory and compliance risks
-- Capital and liquidity disclosures
-- Resolution planning and TLAC (when present)
-- Reported financial figures explicitly stated in filings
-- Risk factor language
-
-### Designed to Refuse
-- Stock price predictions or targets
-- Speculative or forward-looking claims
-- Personal trivia
-- Any statement not supported by retrieved evidence
+Screenshot:
+- `assets/screenshots/aws_inbound_rules.jpg`
 
 ---
 
 ## Dataset
 
-Currently indexed filings:
-- Goldman Sachs — 2023 Form 10-K (1,789 chunks)
-- JPMorgan Chase — 2023 Form 10-K (1,408 chunks)
-- Morgan Stanley — 2023 Form 10-K (637 chunks)
+Indexed filings:
+- Goldman Sachs — 2023 Form 10-K
+- JPMorgan Chase — 2023 Form 10-K
+- Morgan Stanley — 2023 Form 10-K
 
-Total: **3,834 evidence chunks**
+Total evidence chunks: **3,834**
 
-Processed chunks are stored in `data/processed/chunks.jsonl` (3,834 chunks across 3 filings).
+Stored in:
+- `data/processed/chunks.jsonl`
+- `data/processed/embeddings.faiss`
 
 ---
 
 ## Project Structure
 
 - `api/` – FastAPI application
-- `api/rag/` – FAISS store, HF client, agent orchestration
+- `api/rag/` – Retrieval + agent logic
 - `streamlit/` – Analyst-facing UI
 - `data/raw/` – Raw SEC PDFs
 - `data/processed/` – Chunks, embeddings, FAISS index
-- `monitoring/` – Logs and traces
+- `monitoring/` – Logs, metrics and traces
+- `tests/` – Guardrail and refusal tests
+- `assets/` – Screenshots and documentation
 - `architecture.md` – Detailed system design
 - `data_sources.md` – Filing scope and provenance
 
@@ -225,6 +215,7 @@ Each chunk stores:
 - filing year and type
 - deterministic chunk ID
 - chunk text and length
+
 ---
 
 ## How to Run Locally
