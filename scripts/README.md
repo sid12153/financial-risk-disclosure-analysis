@@ -11,11 +11,15 @@ No background jobs or hidden preprocessing steps are used.
 ## Scripts Overview
 
 scripts/
-├── build_chunks.py
-├── build_faiss_index.py
-├── metrics_report.py
-└── script_test_retrieval.py
 
+├── build_chunks.py
+
+
+├── build_faiss_index.py
+
+├── metrics_report.py
+
+└── script_test_retrieval.py
 
 ---
 
