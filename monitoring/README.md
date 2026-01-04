@@ -54,3 +54,70 @@ This is intentionally “boring metrics” — the kind reviewers trust.
 **Run locally**
 ```bash
 python scripts/metrics_report.py
+```
+
+## Phoenix Tracing (OpenTelemetry)
+
+Phoenix is used to provide end-to-end observability for every `/ask` request.
+Each query is recorded as a trace with structured spans and metadata, allowing
+inspection of decisions, evidence quality, and latency.
+
+This makes the system auditable and suitable for compliance-facing workflows.
+
+---
+
+### What is traced
+
+Each request produces **one root trace** with child spans for:
+
+- **Planner**
+  - intent classification (in-scope / out-of-scope)
+  - rewritten retrieval query
+  - chosen `top_k`
+
+- **Retrieval**
+  - FAISS search execution
+  - top retrieval score
+  - retrieved chunk IDs
+
+- **Verifier**
+  - accept or refuse decision
+  - refusal reason (if applicable)
+
+- **Summarizer**
+  - grounded answer generation
+  - citation enforcement
+
+- **Latency**
+  - per-step latency
+  - end-to-end request latency
+
+All spans include structured attributes such as:
+`doc_id`, `top_k`, `top_score`, `refused`, and refusal stage.
+
+---
+
+### How Phoenix runs
+
+Phoenix runs as a Docker service defined in `docker-compose.yml`.
+
+**Exposed endpoints**
+- Phoenix UI: `http://localhost:6006` (local)
+- Phoenix UI: `http://<server-ip>:6006` (deployed)
+
+The FastAPI service exports OpenTelemetry traces directly to Phoenix.
+
+---
+
+### Why this matters
+
+- It **refuses** rather than hallucinating
+- Every answer is **traceable to evidence**
+- Decision logic is **inspectable per request**
+- Latency is measured and monitored
+
+Even without labeled ground-truth data, reliability is demonstrated via:
+- refusal rate (scope enforcement)
+- traceability count (citation discipline)
+- evidence score distributions
+- latency percentiles (production feasibility)
