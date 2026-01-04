@@ -1,11 +1,22 @@
-ts,question,doc_id,top_k,top_score,refused,total_ms,planner_ms,retrieval_ms,verifier_ms,summary_ms
-2025-12-30T19:00:07.730151,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,10608.4,3838.8,2334.8,902.4,3514.9
-2025-12-30T21:54:06.763785,what earnings are disclosed,GoldmanSachs_2023_10K,5,0.558,FALSE,10931.0,3786.6,1800.6,1274.7,4067.0
-2025-12-30T22:57:11.767610,What will the stock price be next year?,GoldmanSachs_2023_10K,5,0.000,TRUE,3533.9,3530.3,0.0,0.0,0.0
-2025-12-30T23:12:40.064788+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,11655.0,4166.3,2646.9,1039.8,3789.3
-2025-12-30T23:13:05.450978+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,9,0.629,FALSE,9442.1,3712.8,1479.2,969.0,3276.6
-2025-12-31T06:15:28.297807+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,12298.8,4241.3,1870.2,997.3,5182.9
-2025-12-31T06:15:45.864231+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,9652.0,3559.6,35.8,1036.8,5018.0
-2025-12-31T06:16:31.794312+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,7327.4,3500.2,33.6,962.6,2828.4
-2025-12-31T06:23:41.764174+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.629,FALSE,10219.4,3966.3,1629.9,1119.8,3500.9
-2025-12-31T06:23:57.345517+00:00,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,9050.5,3482.8,104.4,1116.8,4344.9
+2025-12-31T18:41:58.246939,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,9516.2,3907.9,264.2,1264.0,4029.4
+2025-12-31T18:59:38.253854,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,9294.7,3592.1,109.8,1143.1,4414.9
+2025-12-31T21:19:49.992399,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,6,0.657,FALSE,8891.0,3840.2,211.5,990.8,3817.1
+2026-01-01T00:51:32.340828,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,8328.4,3504.9,161.0,784.7,3827.5
+2026-01-01T00:56:08.862323,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,8043.1,3738.0,136.0,882.2,3258.8
+2026-01-01T16:57:12.484798,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,19227.2,4007.9,10435.7,966.1,3797.2
+2026-01-01T17:00:19.079825,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,7721.2,3292.8,152.1,943.4,3279.5
+2026-01-01T17:01:46.468034,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,7945.4,3346.5,135.5,953.4,3482.8
+2026-01-01T17:03:54.917785,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,9278.1,3299.8,131.8,1097.0,4729.9
+2026-01-01T17:16:35.217000,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,9042.2,3721.7,144.6,843.7,4295.5
+2026-01-01T17:25:33.566992,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,15490.4,3738.7,7061.2,851.4,3825.0
+2026-01-01T17:26:28.059113,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.611,FALSE,8611.8,3533.0,170.3,787.9,4087.6
+2026-01-01T17:26:47.723584,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,8427.3,3439.5,142.4,1133.1,3690.9
+2026-01-01T20:27:28.516634,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,26846.3,3889.9,18335.5,1082.1,3457.5
+2026-01-01T21:11:03.509321,"all mentioned revenue
+",GoldmanSachs_2023_10K,5,0.000,TRUE,5784.9,5755.3,0.0,0.0,0.0
+2026-01-01T21:58:15.526427,"all mentioned revenue
+",GoldmanSachs_2023_10K,5,0.000,TRUE,3594.8,3513.2,0.0,0.0,0.0
+2026-01-01T21:58:51.835774,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.657,FALSE,8229.9,3262.3,274.1,949.5,3673.6
+2026-01-01T22:01:34.104320,What regulatory or compliance risks are highlighted related to capital requirements and resolution planning?,GoldmanSachs_2023_10K,5,0.611,FALSE,12612.1,7591.2,155.2,902.0,3897.3
+2026-01-03T23:24:25.629958,What liquidity risks and funding sources are discussed?,GoldmanSachs_2023_10K,5,0.707,FALSE,10769.5,3825.2,1317.8,1004.7,4603.1
+2026-01-03T23:24:28.477344,What will the stock price be next year?,GoldmanSachs_2023_10K,5,0.000,TRUE,2834.0,2832.9,0.0,0.0,0.0
