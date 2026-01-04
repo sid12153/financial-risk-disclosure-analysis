@@ -32,8 +32,8 @@ Every `/ask` request appends a row with a stable schema:
 
 This creates an auditable record of how the system behaved over time.
 
-> Note: logs are intentionally CSV (simple, portable, recruiter-friendly).  
-> Future: ship to a structured sink (S3/CloudWatch/ELK).
+> Note: logs are intentionally CSV (simple, portable).  
+> Future: ship to a structured sink (S3/CloudWatch).
 
 ---
 
