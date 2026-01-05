@@ -6,8 +6,7 @@
 ![Observability](https://img.shields.io/badge/Observability-Arize%20Phoenix-red)
 ![Cloud](https://img.shields.io/badge/Cloud-AWS%20EC2-yellow)
 
-**Evidence-first financial intelligence over SEC filings.  
-Every answer is cited or explicitly refused.**
+***Evidence-first financial intelligence over SEC filings. Every answer is cited or explicitly refused.***
 
 ---
 
