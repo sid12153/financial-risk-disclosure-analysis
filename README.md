@@ -107,8 +107,12 @@ Phoenix exposes:
 - Evidence score distributions
 
 **Screenshots**
-- `assets/screenshots/phoenix_kpi.jpg`
-- `assets/screenshots/phoenix_trace.jpg`
+- **Latency KPIs and system health**
+![Phoenix KPIs](assets/screenshots/phoenix_kpi.jpg)
+
+- **End-to-end trace showing multi-agent execution**
+![Phoenix Trace](assets/screenshots/phoenix_trace.jpg)
+
 
 ---
 
@@ -134,7 +138,8 @@ Latency by stage (P50):
 - Summarizer: **3.6s**
 
 Screenshot:
-- `assets/screenshots/metrics_report.jpg`
+- **Latency, refusal rate, and evidence score distribution**
+![Metrics Report](assets/screenshots/metrics_report.jpg)
 
 ---
 
@@ -148,9 +153,15 @@ The UI surfaces **decision-relevant KPIs**, not vanity metrics:
 - End-to-end latency
 
 Screenshots:
-- `assets/screenshots/home_UI.jpg`
-- `assets/screenshots/answer_1.jpg`
-- `assets/screenshots/refusal.jpg`
+- **Home dashboard**
+![Home UI](assets/screenshots/home_UI.jpg)
+
+- **Grounded answer with citations**
+![Answer Example](assets/screenshots/answer_1.jpg)
+![Answer Example](assets/screenshots/answer_2.jpg)
+
+- **Explicit refusal when evidence is insufficient**
+![Refusal Example](assets/screenshots/refusal.jpg)
 
 ---
 
@@ -171,7 +182,8 @@ Deployment was validated on **AWS EC2**.
 - 6006 – Phoenix UI
 
 Screenshot:
-- `assets/screenshots/aws_inbound_rules.jpg`
+- **Security group inbound rules (API, UI, tracing)**
+![AWS Inbound Rules](assets/screenshots/aws_inbound_rules.jpg)
 
 ---
 
